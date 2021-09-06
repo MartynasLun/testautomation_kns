@@ -88,8 +88,78 @@ test.describe('Duck duck test suite', () => {
         const webPage = page.url();
         expect(webPage).toBe('https://www.wikipedia.org/');
     });
+    const options = {
+        fullPage: false,
+        clip: {
+          x: 5,
+          y: 60,
+          width: 240,
+          height: 40
+        }
+      }
+    test('Check that QR code is valid for devbridge.com', async () => {
+        await page.fill('#search_form_input_homepage', 'qr www.devbridge.com');
+        await page.click('#search_button_homepage');
+        await page.waitForSelector('img[alt="A QR Code"]');
+        
+        expect(await page.screenshot(options)).toMatchSnapshot('landing.png');
+    });
 
-    test('panda', async () => {
+    test('Check that QR code is valid for devbridge.com2', async () => {
+        await page.fill('#search_form_input_homepage', 'qr www.devbridge.com');
+        await page.click('#search_button_homepage');
+        await page.waitForSelector('img[alt="A QR Code"]');
+        const locator = page.locator('img[alt="A QR Code"]');
+        
+        
+        expect(await locator.screenshot()).toMatchSnapshot('landing2.png');
+    });
+
+    test('Check that menu language can changed', async () => {
+        await page.fill('#search_form_input_homepage', 'qr www.devbridge.com');
+        await page.click('#search_button_homepage');
+        await page.waitForSelector('img[alt="A QR Code"]');
+        await page.click("#duckbar_dropdowns > li > div > a");
+        await page.selectOption('#setting_kad', 'lt_LT');
+        await page.waitForNavigation();
+        menuText = await page.textContent("#duckbar")
+        expect(menuText).toMatch("VisiVaizdaiVaizdo įrašaiNaujienosŽemėlapiaiAtsakymasNustatymai");
+    });
+
+    test('Check that color picker works', async () => {
+        await page.fill('#search_form_input_homepage', 'calculator');
+        await page.click('#search_button_homepage');
+        await page.click('button[value="1"]', {delay: 100});
+        await page.click('button[value="+"]', {delay: 100});
+        await page.click('button[value="1"]', {delay: 100});
+        await page.click('button[value="="]', {delay: 100});
+        const sumResult = await page.textContent('#display');
+        await page.click('button[value="3"]', {delay: 100});
+        await page.click('button[value="×"]', {delay: 100});
+        await page.click('button[value="3"]', {delay: 100});
+        await page.click('button[value="="]', {delay: 100});
+        const multiplyResult = await page.textContent('#display');
+
+        expect(parseInt(sumResult)).toBe(2);
+        expect(parseInt(multiplyResult)).toBe(9)
+        expect(await page.textContent(".tile__calc__col.tile__history")).toBe("\n    3 × 3\n    9\n\n\n    1 + 1\n    2\n\n");
+    });
+
+    test('Waiting for valid api responses', async () => {
+        await page.fill('#search_form_input_homepage', 'test');
+        const [response] = await Promise.all([
+            // Waits for the next response matching some conditions
+            page.waitForResponse(response => response.url() === 'https://duckduckgo.com/js/spice/dictionary/hyphenation/test' && response.status() === 200),
+            page.waitForResponse(response => response.url() === 'https://duckduckgo.com/js/spice/dictionary/pronunciation/test' && response.status() === 200),
+            page.waitForResponse(response => response.url() === 'https://duckduckgo.com/js/spice/dictionary/audio/test' && response.status() === 200),
+            // Triggers the response
+            await page.click('#search_button_homepage'),
+          ]);
+          expect(response.status).toBe(200);
+    });
+
+
+    test('Check that in title search works', async () => {
         await page.waitForSelector("#search_form_input_homepage");
         await page.fill('#search_form_input_homepage', "intitle:panda");
         await page.click("#search_button_homepage", { force: true });

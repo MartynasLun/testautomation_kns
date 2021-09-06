@@ -5,7 +5,7 @@ const config = {
   use: {
     screenshot: 'on',
     headless: false,
-        viewport: { width: 1280, height: 720 },
+        viewport: { width: 1680, height: 920 },
             launchOptions: {
             slowMo: 150,
         },
